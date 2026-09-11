@@ -31,7 +31,13 @@ class TransactionViewModel: ObservableObject {
             storageManager.markAsLaunched()
         } else {
             // 后续启动，加载本地保存的数据
-            transactions = storageManager.loadTransactions().sorted { $0.date > $1.date }
+            let savedTransactions = storageManager.loadTransactions()
+            // 如果本地没有数据或数据不足，重新加载样本数据
+            if savedTransactions.isEmpty || savedTransactions.count < 10 {
+                loadSampleData()
+            } else {
+                transactions = savedTransactions.sorted { $0.date > $1.date }
+            }
         }
     }
     

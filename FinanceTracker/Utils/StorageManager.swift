@@ -59,4 +59,9 @@ class StorageManager {
         saveTransactions(sampleData)
         markAsLaunched()
     }
+    
+    /// 强制重新加载样本数据（开发调试用）
+    func forceReloadSampleData() {
+        UserDefaults.standard.removeObject(forKey: firstLaunchKey)
+    }
 }
