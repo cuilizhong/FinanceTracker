@@ -6,68 +6,42 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var selectedTab = 0
+    @State private var selectedTab: Int = 0
     @State private var showAddTransaction = false
     @State private var fabPosition: CGPoint = CGPoint(x: UIScreen.main.bounds.width - 50, y: UIScreen.main.bounds.height - 150)
     @EnvironmentObject var viewModel: TransactionViewModel
     
     var body: some View {
         ZStack(alignment: .bottom) {
+            // 使用原生 TabView 配合 .tabViewStyle(.automatic) 实现标准 iOS TabBar
             TabView(selection: $selectedTab) {
                 DashboardView()
+                    .tabItem {
+                        Label("概览", systemImage: "chart.pie.fill")
+                    }
                     .tag(0)
-                    .padding(.bottom, 100)
                 
                 AnalyticsView()
+                    .tabItem {
+                        Label("分析", systemImage: "chart.bar.fill")
+                    }
                     .tag(1)
-                    .padding(.bottom, 100)
                 
                 CalculatorsHomeView()
+                    .tabItem {
+                        Label("工具", systemImage: "function")
+                    }
                     .tag(2)
-                    .padding(.bottom, 100)
                 
                 SettingsView()
+                    .tabItem {
+                        Label("设置", systemImage: "gearshape.fill")
+                    }
                     .tag(3)
-                    .padding(.bottom, 100)
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
+            .tabViewStyle(.automatic)  // 使用自动样式（iOS 标准 TabBar）
             
-            HStack(spacing: 0) {
-                Button { selectedTab = 0 } label: {
-                    VStack(spacing: 4) {
-                        Image(systemName: "chart.pie.fill").font(.system(size: 20)).foregroundColor(selectedTab == 0 ? .blue : .gray)
-                        Text("概览").font(.caption2).foregroundColor(selectedTab == 0 ? .blue : .gray)
-                    }.frame(width: 70)
-                }
-                Spacer()
-                Button { selectedTab = 1 } label: {
-                    VStack(spacing: 4) {
-                        Image(systemName: "chart.bar.fill").font(.system(size: 20)).foregroundColor(selectedTab == 1 ? .blue : .gray)
-                        Text("分析").font(.caption2).foregroundColor(selectedTab == 1 ? .blue : .gray)
-                    }.frame(width: 70)
-                }
-                Spacer()
-                Button { selectedTab = 2 } label: {
-                    VStack(spacing: 4) {
-                        Image(systemName: "function").font(.system(size: 20)).foregroundColor(selectedTab == 2 ? .blue : .gray)
-                        Text("工具").font(.caption2).foregroundColor(selectedTab == 2 ? .blue : .gray)
-                    }.frame(width: 70)
-                }
-                Spacer()
-                Button { selectedTab = 3 } label: {
-                    VStack(spacing: 4) {
-                        Image(systemName: "gearshape.fill").font(.system(size: 20)).foregroundColor(selectedTab == 3 ? .blue : .gray)
-                        Text("设置").font(.caption2).foregroundColor(selectedTab == 3 ? .blue : .gray)
-                    }.frame(width: 70)
-                }
-            }
-            .padding(.horizontal, 30)
-            .padding(.vertical, 12)
-            .background(RoundedRectangle(cornerRadius: 30).fill(.ultraThinMaterial))
-            .padding(.horizontal)
-            .padding(.bottom, 8)
-            
-            // 浮动加号按钮 - 使用 ZStack 替代 Button，这样拖动手势会优先
+            // 浮动加号按钮 - 支持拖动
             ZStack {
                 Circle()
                     .fill(LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing))
@@ -115,5 +89,6 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView().environmentObject(TransactionViewModel())
+    ContentView()
+        .environmentObject(TransactionViewModel())
 }
