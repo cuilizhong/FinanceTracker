@@ -8,7 +8,6 @@ import SwiftUI
 struct DashboardView: View {
     @EnvironmentObject var viewModel: TransactionViewModel
     @State private var selectedTransaction: Transaction?
-    @State private var showEditSheet = false
     @State private var showDeleteAlert = false
     @State private var transactionToDelete: Transaction?
     
@@ -91,7 +90,6 @@ struct DashboardView: View {
                                 transaction: transaction,
                                 onEdit: {
                                     selectedTransaction = transaction
-                                    showEditSheet = true
                                 },
                                 onDelete: {
                                     transactionToDelete = transaction
@@ -105,11 +103,9 @@ struct DashboardView: View {
                 Spacer(minLength: 100)
             }
         }
-        .sheet(isPresented: $showEditSheet) {
-            if let transaction = selectedTransaction {
-                EditTransactionView(transaction: transaction, isPresented: $showEditSheet)
-                    .environmentObject(viewModel)
-            }
+        .sheet(item: $selectedTransaction) { transaction in
+            EditTransactionView(transaction: transaction)
+                .environmentObject(viewModel)
         }
         .alert("删除交易", isPresented: $showDeleteAlert) {
             Button("取消", role: .cancel) { }
@@ -139,7 +135,7 @@ struct DashboardView: View {
 struct EditTransactionView: View {
     @State var transaction: Transaction
     @EnvironmentObject var viewModel: TransactionViewModel
-    @Binding var isPresented: Bool
+    @Environment(\.dismiss) var dismiss
     
     @State private var amount: String = ""
     @State private var selectedCategory: Category = .food
@@ -147,6 +143,16 @@ struct EditTransactionView: View {
     @State private var date = Date()
     @State private var note: String = ""
     @State private var showCategoryPicker = false
+    
+    init(transaction: Transaction) {
+        _transaction = State(initialValue: transaction)
+        // 在 init 中初始化所有状态，避免首次打开为空白
+        _amount = State(initialValue: String(transaction.amount))
+        _selectedCategory = State(initialValue: transaction.category)
+        _selectedType = State(initialValue: transaction.type)
+        _date = State(initialValue: transaction.date)
+        _note = State(initialValue: transaction.note)
+    }
     
     var body: some View {
         NavigationView {
@@ -205,7 +211,7 @@ struct EditTransactionView: View {
                         updatedTransaction.date = date
                         updatedTransaction.note = note.isEmpty ? selectedCategory.rawValue : note
                         viewModel.updateTransaction(updatedTransaction)
-                        isPresented = false
+                        dismiss()
                     } label: {
                         Text("保存").font(.headline).foregroundColor(.white).frame(maxWidth: .infinity).padding()
                             .background(LinearGradient(colors: [.blue, .purple], startPoint: .leading, endPoint: .trailing))
@@ -216,17 +222,10 @@ struct EditTransactionView: View {
                 }
             }
             .navigationTitle("编辑交易").navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .navigationBarLeading) { Button("取消") { isPresented = false } } }
+            .toolbar { ToolbarItem(placement: .navigationBarLeading) { Button("取消") { dismiss() } } }
         }
         .sheet(isPresented: $showCategoryPicker) {
             CategoryPickerView(selectedCategory: $selectedCategory)
-        }
-        .onAppear {
-            amount = String(transaction.amount)
-            selectedCategory = transaction.category
-            selectedType = transaction.type
-            date = transaction.date
-            note = transaction.note
         }
     }
 }
@@ -269,7 +268,9 @@ struct TransactionRowView: View {
             } label: {
                 Image(systemName: "ellipsis")
                     .foregroundColor(.gray)
-                    .frame(width: 30)
+                    .font(.system(size: 18, weight: .semibold))
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
             }
         }
         .padding(.horizontal).padding(.vertical, 12)

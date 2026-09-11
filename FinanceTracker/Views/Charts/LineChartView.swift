@@ -24,13 +24,19 @@ struct LineChartView: View {
                     let minValue = (data.map { $0.1 }.min() ?? 0)
                     let range = maxValue - minValue > 0 ? maxValue - minValue : 100
                     
+                    // 留出空间给边缘的数据点
+                    let pointRadius: CGFloat = 4
+                    let padding: CGFloat = pointRadius + 2
+                    let chartWidth = size.width - 2 * padding
+                    let chartHeight = size.height - 40  // 上下留白
+                    
                     var path = Path()
-                    let stepX = size.width / CGFloat(max(data.count - 1, 1))
+                    let stepX = chartWidth / CGFloat(max(data.count - 1, 1))
                     
                     // 绘制数据点和连接线
                     for (index, (_, value)) in data.enumerated() {
-                        let x = CGFloat(index) * stepX
-                        let y = size.height - ((value - minValue) / range) * size.height * 0.8 - 20
+                        let x = padding + CGFloat(index) * stepX
+                        let y = size.height - ((value - minValue) / range) * chartHeight - 20
                         
                         if index == 0 {
                             path.move(to: CGPoint(x: x, y: y))
@@ -48,11 +54,11 @@ struct LineChartView: View {
                     
                     // 绘制数据点
                     for (index, (_, value)) in data.enumerated() {
-                        let x = CGFloat(index) * stepX
-                        let y = size.height - ((value - minValue) / range) * size.height * 0.8 - 20
+                        let x = padding + CGFloat(index) * stepX
+                        let y = size.height - ((value - minValue) / range) * chartHeight - 20
                         
                         context.fill(
-                            Path(ellipseIn: CGRect(x: x - 4, y: y - 4, width: 8, height: 8)),
+                            Path(ellipseIn: CGRect(x: x - pointRadius, y: y - pointRadius, width: pointRadius * 2, height: pointRadius * 2)),
                             with: .color(color)
                         )
                     }

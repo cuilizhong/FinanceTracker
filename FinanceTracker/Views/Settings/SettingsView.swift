@@ -83,7 +83,7 @@ struct SettingsView: View {
                 // 数据管理
                 VStack(spacing: 12) {
                     HStack {
-                        Image(systemName: "database.fill").foregroundColor(.green).frame(width: 28)
+                        Image(systemName: "doc.fill").foregroundColor(.green).frame(width: 28)
                         Text("数据管理").font(.headline)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)

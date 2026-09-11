@@ -7,28 +7,43 @@ import SwiftUI
 
 struct AnalyticsView: View {
     @EnvironmentObject var viewModel: TransactionViewModel
-    @State private var showDetailedStats = false
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // 时间段选择器（点击切换）
+            PeriodSelectorView(selectedPeriod: $viewModel.selectedPeriod)
+                .padding(.bottom, 12)
+            
+            // 使用 TabView 实现分页效果（支持滑动切换）
+            TabView(selection: $viewModel.selectedPeriod) {
+                // 周视图
+                AnalyticsContentView()
+                    .environmentObject(viewModel)
+                    .tag(TransactionViewModel.TimePeriod.week)
+                
+                // 月视图
+                AnalyticsContentView()
+                    .environmentObject(viewModel)
+                    .tag(TransactionViewModel.TimePeriod.month)
+                
+                // 年视图
+                AnalyticsContentView()
+                    .environmentObject(viewModel)
+                    .tag(TransactionViewModel.TimePeriod.year)
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .frame(maxHeight: .infinity)
+        }
+    }
+}
+
+// MARK: - 分析内容视图
+struct AnalyticsContentView: View {
+    @EnvironmentObject var viewModel: TransactionViewModel
     
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // 时间段选择器
-                VStack(spacing: 12) {
-                    HStack {
-                        Text("数据分析").font(.headline)
-                        Spacer()
-                    }
-                    .padding(.horizontal)
-                    
-                    Picker("时间段", selection: $viewModel.selectedPeriod) {
-                        ForEach(TransactionViewModel.TimePeriod.allCases, id: \.self) {
-                            Text($0.rawValue).tag($0)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(.horizontal)
-                }
-                
                 // 收支汇总卡片
                 HStack(spacing: 12) {
                     VStack(alignment: .leading, spacing: 8) {
@@ -161,6 +176,7 @@ struct AnalyticsView: View {
     }
 }
 
+// MARK: - 统计卡片视图
 struct StatisticsCardView: View {
     @EnvironmentObject var viewModel: TransactionViewModel
     
@@ -175,24 +191,6 @@ struct StatisticsCardView: View {
         let daySpan = max(1, dates.count)
         
         return expenses.map { $0.amount }.reduce(0, +) / Double(daySpan)
-    }
-    
-    var filterTransactions: () -> [Transaction] {
-        return {
-            let calendar = Calendar.current
-            let now = Date()
-            switch viewModel.selectedPeriod {
-            case .week:
-                let weekAgo = calendar.date(byAdding: .day, value: -7, to: now)!
-                return viewModel.transactions.filter { $0.date >= weekAgo }
-            case .month:
-                let monthAgo = calendar.date(byAdding: .month, value: -1, to: now)!
-                return viewModel.transactions.filter { $0.date >= monthAgo }
-            case .year:
-                let yearAgo = calendar.date(byAdding: .year, value: -1, to: now)!
-                return viewModel.transactions.filter { $0.date >= yearAgo }
-            }
-        }
     }
     
     var body: some View {
@@ -223,6 +221,7 @@ struct StatisticsCardView: View {
     }
 }
 
+// MARK: - 统计卡片
 struct StatCard: View {
     let icon: String
     let title: String
@@ -247,6 +246,59 @@ struct StatCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
         .background(RoundedRectangle(cornerRadius: 12).fill(Color(.systemGray6)))
+    }
+}
+
+// MARK: - 时间段选择器
+struct PeriodSelectorView: View {
+    @Binding var selectedPeriod: TransactionViewModel.TimePeriod
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            HStack {
+                Text("数据分析").font(.system(size: 20, weight: .semibold))
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+            
+            // 自定义选项卡 - 更平滑的动画和间距
+            HStack(spacing: 12) {
+                ForEach(TransactionViewModel.TimePeriod.allCases, id: \.self) { period in
+                    Button {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                            selectedPeriod = period
+                        }
+                    } label: {
+                        Text(period.rawValue)
+                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+                            .foregroundColor(selectedPeriod == period ? .white : .gray)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 44)
+                            .background(
+                                Group {
+                                    if selectedPeriod == period {
+                                        // 选中状态：蓝紫渐变 + 阴影
+                                        RoundedRectangle(cornerRadius: 14)
+                                            .fill(LinearGradient(
+                                                colors: [.blue, .purple],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            ))
+                                            .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
+                                    } else {
+                                        // 未选中状态：浅灰色背景
+                                        RoundedRectangle(cornerRadius: 14)
+                                            .fill(Color(.systemGray6))
+                                    }
+                                }
+                            )
+                            .scaleEffect(selectedPeriod == period ? 1.02 : 1.0)
+                    }
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 8)
+        }
     }
 }
 
