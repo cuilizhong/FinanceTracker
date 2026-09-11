@@ -18,7 +18,7 @@ struct DashboardView: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("你好！").font(.title2).fontWeight(.semibold)
-                        Text("欢迎使用理财追踪器").font(.subheadline).foregroundColor(.secondary)
+                        Text("今日余额: ¥\(Int(viewModel.balance))").font(.subheadline).foregroundColor(.secondary)
                     }
                     Spacer()
                     Circle().fill(LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing))
@@ -28,6 +28,7 @@ struct DashboardView: View {
                 .padding(.horizontal)
                 .padding(.top)
                 
+                // 余额卡片
                 VStack(spacing: 16) {
                     Text("当前余额").font(.subheadline).foregroundColor(.white.opacity(0.8))
                     Text("¥ \(Int(viewModel.balance))").font(.system(size: 42, weight: .bold, design: .rounded)).foregroundColor(.white)
@@ -46,8 +47,42 @@ struct DashboardView: View {
                 .background(RoundedRectangle(cornerRadius: 25).fill(LinearGradient(colors: [.blue, .purple, .pink], startPoint: .topLeading, endPoint: .bottomTrailing)))
                 .padding(.horizontal)
                 
+                // 快速统计卡片
+                HStack(spacing: 12) {
+                    QuickStatCard(
+                        icon: "calendar",
+                        title: "今月交易",
+                        value: "\(viewModel.filterTransactions().count)",
+                        color: .blue
+                    )
+                    
+                    QuickStatCard(
+                        icon: "chart.pie.fill",
+                        title: "分类数",
+                        value: "\(viewModel.expensesByCategory().count)",
+                        color: .orange
+                    )
+                    
+                    QuickStatCard(
+                        icon: "arrow.up.right",
+                        title: "平均消费",
+                        value: "¥\(Int(calculateAverageDailyExpense()))",
+                        color: .red
+                    )
+                }
+                .padding(.horizontal)
+                
+                // 最近交易
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("最近交易").font(.headline).padding(.horizontal)
+                    HStack {
+                        Text("最近交易").font(.headline)
+                        Spacer()
+                        Text("全部 (\(viewModel.transactions.count))")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.horizontal)
+                    
                     if viewModel.recentTransactions.isEmpty {
                         Text("暂无交易").font(.subheadline).foregroundColor(.secondary).frame(maxWidth: .infinity, alignment: .center).padding()
                     } else {
@@ -87,45 +122,17 @@ struct DashboardView: View {
             Text("确定要删除这笔交易吗？此操作无法撤销。")
         }
     }
-}
-
-struct TransactionRowView: View {
-    let transaction: Transaction
-    let onEdit: () -> Void
-    let onDelete: () -> Void
     
-    @State private var showMenu = false
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            Circle().fill(transaction.category.color.opacity(0.2)).frame(width: 50, height: 50)
-                .overlay { Image(systemName: transaction.category.icon).foregroundColor(transaction.category.color) }
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(transaction.category.rawValue).font(.subheadline).fontWeight(.medium)
-                Text(transaction.note).font(.caption).foregroundColor(.secondary)
-            }
-            
-            Spacer()
-            
-            Text(transaction.displayAmount).font(.subheadline).fontWeight(.semibold)
-                .foregroundColor(transaction.type == .income ? .green : .primary)
-            
-            Menu {
-                Button { onEdit() } label: {
-                    Label("编辑", systemImage: "pencil")
-                }
-                Button(role: .destructive) { onDelete() } label: {
-                    Label("删除", systemImage: "trash")
-                }
-            } label: {
-                Image(systemName: "ellipsis")
-                    .foregroundColor(.gray)
-                    .frame(width: 30)
-            }
-        }
-        .padding(.horizontal).padding(.vertical, 12)
-        .background(Color(.systemGray6)).cornerRadius(12)
+    private func calculateAverageDailyExpense() -> Double {
+        let filtered = viewModel.filterTransactions()
+        let expenses = filtered.filter { $0.type == .expense }
+        
+        if expenses.isEmpty { return 0 }
+        
+        let dates = Set(expenses.map { Calendar.current.startOfDay(for: $0.date) })
+        let daySpan = max(1, dates.count)
+        
+        return expenses.map { $0.amount }.reduce(0, +) / Double(daySpan)
     }
 }
 
@@ -226,4 +233,75 @@ struct EditTransactionView: View {
 
 #Preview {
     DashboardView().environmentObject(TransactionViewModel())
+}
+
+// MARK: - 辅助组件
+
+struct TransactionRowView: View {
+    let transaction: Transaction
+    let onEdit: () -> Void
+    let onDelete: () -> Void
+    
+    @State private var showMenu = false
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Circle().fill(transaction.category.color.opacity(0.2)).frame(width: 50, height: 50)
+                .overlay { Image(systemName: transaction.category.icon).foregroundColor(transaction.category.color) }
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(transaction.category.rawValue).font(.subheadline).fontWeight(.medium)
+                Text(transaction.note).font(.caption).foregroundColor(.secondary)
+            }
+            
+            Spacer()
+            
+            Text(transaction.displayAmount).font(.subheadline).fontWeight(.semibold)
+                .foregroundColor(transaction.type == .income ? .green : .primary)
+            
+            Menu {
+                Button { onEdit() } label: {
+                    Label("编辑", systemImage: "pencil")
+                }
+                Button(role: .destructive) { onDelete() } label: {
+                    Label("删除", systemImage: "trash")
+                }
+            } label: {
+                Image(systemName: "ellipsis")
+                    .foregroundColor(.gray)
+                    .frame(width: 30)
+            }
+        }
+        .padding(.horizontal).padding(.vertical, 12)
+        .background(Color(.systemGray6)).cornerRadius(12)
+    }
+}
+
+struct QuickStatCard: View {
+    let icon: String
+    let title: String
+    let value: String
+    let color: Color
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: icon)
+                    .foregroundColor(color)
+                    .font(.system(size: 14))
+                
+                Spacer()
+            }
+            
+            Text(title)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+            
+            Text(value)
+                .font(.system(size: 14, weight: .semibold))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(RoundedRectangle(cornerRadius: 12).fill(Color(.systemGray6)))
+    }
 }

@@ -86,6 +86,22 @@ class TransactionViewModel: ObservableObject {
     
     var recentTransactions: [Transaction] { Array(transactions.prefix(10)) }
     
+    func filterTransactions() -> [Transaction] {
+        let calendar = Calendar.current
+        let now = Date()
+        switch selectedPeriod {
+        case .week:
+            let weekAgo = calendar.date(byAdding: .day, value: -7, to: now)!
+            return transactions.filter { $0.date >= weekAgo }
+        case .month:
+            let monthAgo = calendar.date(byAdding: .month, value: -1, to: now)!
+            return transactions.filter { $0.date >= monthAgo }
+        case .year:
+            let yearAgo = calendar.date(byAdding: .year, value: -1, to: now)!
+            return transactions.filter { $0.date >= yearAgo }
+        }
+    }
+    
     func expensesByCategory() -> [(Category, Double)] {
         let filtered = filterTransactions().filter { $0.type == .expense }
         var categoryTotals: [Category: Double] = [:]
@@ -109,21 +125,5 @@ class TransactionViewModel: ObservableObject {
             dailyData[day, default: 0] += amount
         }
         return dailyData.sorted { $0.key < $1.key }
-    }
-    
-    private func filterTransactions() -> [Transaction] {
-        let calendar = Calendar.current
-        let now = Date()
-        switch selectedPeriod {
-        case .week:
-            let weekAgo = calendar.date(byAdding: .day, value: -7, to: now)!
-            return transactions.filter { $0.date >= weekAgo }
-        case .month:
-            let monthAgo = calendar.date(byAdding: .month, value: -1, to: now)!
-            return transactions.filter { $0.date >= monthAgo }
-        case .year:
-            let yearAgo = calendar.date(byAdding: .year, value: -1, to: now)!
-            return transactions.filter { $0.date >= yearAgo }
-        }
     }
 }
