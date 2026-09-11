@@ -22,8 +22,12 @@ struct ContentView: View {
                     .tag(1)
                     .padding(.bottom, 100)
                 
-                SettingsView()
+                CalculatorsHomeView()
                     .tag(2)
+                    .padding(.bottom, 100)
+                
+                SettingsView()
+                    .tag(3)
                     .padding(.bottom, 100)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
@@ -45,8 +49,15 @@ struct ContentView: View {
                 Spacer()
                 Button { selectedTab = 2 } label: {
                     VStack(spacing: 4) {
-                        Image(systemName: "gearshape.fill").font(.system(size: 20)).foregroundColor(selectedTab == 2 ? .blue : .gray)
-                        Text("设置").font(.caption2).foregroundColor(selectedTab == 2 ? .blue : .gray)
+                        Image(systemName: "calculator.fill").font(.system(size: 20)).foregroundColor(selectedTab == 2 ? .blue : .gray)
+                        Text("工具").font(.caption2).foregroundColor(selectedTab == 2 ? .blue : .gray)
+                    }.frame(width: 70)
+                }
+                Spacer()
+                Button { selectedTab = 3 } label: {
+                    VStack(spacing: 4) {
+                        Image(systemName: "gearshape.fill").font(.system(size: 20)).foregroundColor(selectedTab == 3 ? .blue : .gray)
+                        Text("设置").font(.caption2).foregroundColor(selectedTab == 3 ? .blue : .gray)
                     }.frame(width: 70)
                 }
             }
