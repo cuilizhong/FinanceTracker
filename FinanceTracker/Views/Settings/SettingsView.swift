@@ -46,11 +46,11 @@ struct SettingsView: View {
                     .padding(.horizontal)
                     
                     Button {
-                        viewModel.loadSampleData()
+                        viewModel.resetToSampleData()
                     } label: {
                         HStack {
                             Image(systemName: "arrow.clockwise").foregroundColor(.blue).frame(width: 24)
-                            Text("重新加载演示数据").font(.subheadline).foregroundColor(.primary)
+                            Text("重置为演示数据").font(.subheadline).foregroundColor(.primary)
                             Spacer()
                             Image(systemName: "chevron.right").font(.caption).foregroundColor(.secondary)
                         }

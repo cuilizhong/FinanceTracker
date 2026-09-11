@@ -13,6 +13,7 @@ struct AddTransactionView: View {
     @State private var selectedType: TransactionType = .expense
     @State private var date = Date()
     @State private var note: String = ""
+    @State private var showCategoryPicker = false
     
     var body: some View {
         NavigationView {
@@ -33,16 +34,22 @@ struct AddTransactionView: View {
                         .padding(.horizontal)
                     }.padding(.vertical, 20)
                     
-                    Button { } label: {
+                    // 分类选择器 - 改为可交互
+                    Button { showCategoryPicker = true } label: {
                         HStack {
-                            Image(systemName: "tag.fill").foregroundColor(.blue).frame(width: 24)
-                            Text("分类").foregroundColor(.primary)
+                            Circle().fill(selectedCategory.color.opacity(0.2)).frame(width: 40, height: 40)
+                                .overlay { Image(systemName: selectedCategory.icon).foregroundColor(selectedCategory.color) }
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("分类").font(.caption).foregroundColor(.secondary)
+                                Text(selectedCategory.rawValue).foregroundColor(.primary).fontWeight(.medium)
+                            }
                             Spacer()
-                            Text(selectedCategory.rawValue).foregroundColor(.primary)
+                            Image(systemName: "chevron.right").foregroundColor(.gray)
                         }
                         .padding()
                         .background(RoundedRectangle(cornerRadius: 12).fill(Color(.systemGray6)))
-                    }.padding(.horizontal)
+                    }
+                    .padding(.horizontal)
                     
                     DatePicker("日期", selection: $date, displayedComponents: [.date])
                         .padding().background(RoundedRectangle(cornerRadius: 12).fill(Color(.systemGray6)))
@@ -59,7 +66,13 @@ struct AddTransactionView: View {
                     
                     Button {
                         guard let amountValue = Double(amount) else { return }
-                        let transaction = Transaction(amount: amountValue, category: selectedCategory, type: selectedType, date: date, note: note.isEmpty ? selectedCategory.rawValue : note)
+                        let transaction = Transaction(
+                            amount: amountValue,
+                            category: selectedCategory,
+                            type: selectedType,
+                            date: date,
+                            note: note.isEmpty ? selectedCategory.rawValue : note
+                        )
                         viewModel.addTransaction(transaction)
                         dismiss()
                     } label: {
@@ -73,6 +86,9 @@ struct AddTransactionView: View {
             }
             .navigationTitle("添加交易").navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .navigationBarLeading) { Button("取消") { dismiss() } } }
+        }
+        .sheet(isPresented: $showCategoryPicker) {
+            CategoryPickerView(selectedCategory: $selectedCategory)
         }
     }
 }

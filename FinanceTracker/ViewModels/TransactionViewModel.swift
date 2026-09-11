@@ -11,6 +11,8 @@ class TransactionViewModel: ObservableObject {
     @Published var transactions: [Transaction] = []
     @Published var selectedPeriod: TimePeriod = .month
     
+    private let storageManager = StorageManager.shared
+    
     enum TimePeriod: String, CaseIterable {
         case week = "周"
         case month = "月"
@@ -18,19 +20,58 @@ class TransactionViewModel: ObservableObject {
     }
     
     init() {
-        loadSampleData()
+        loadData()
+    }
+    
+    /// 初始化加载数据：首次启动加载样本数据，之后加载本地保存的数据
+    private func loadData() {
+        if storageManager.isFirstLaunch() {
+            // 首次启动，加载样本数据
+            loadSampleData()
+            storageManager.markAsLaunched()
+        } else {
+            // 后续启动，加载本地保存的数据
+            transactions = storageManager.loadTransactions().sorted { $0.date > $1.date }
+        }
     }
     
     func loadSampleData() {
         transactions = Transaction.sampleData.sorted { $0.date > $1.date }
+        saveTransactions()
     }
     
     func addTransaction(_ transaction: Transaction) {
         transactions.insert(transaction, at: 0)
+        saveTransactions()
     }
     
     func deleteTransaction(_ transaction: Transaction) {
         transactions.removeAll { $0.id == transaction.id }
+        saveTransactions()
+    }
+    
+    /// 编辑交易
+    func updateTransaction(_ transaction: Transaction) {
+        if let index = transactions.firstIndex(where: { $0.id == transaction.id }) {
+            transactions[index] = transaction
+            saveTransactions()
+        }
+    }
+    
+    /// 保存交易到本地存储
+    private func saveTransactions() {
+        storageManager.saveTransactions(transactions)
+    }
+    
+    /// 清空所有数据
+    func clearAllTransactions() {
+        transactions.removeAll()
+        storageManager.clearAllData()
+    }
+    
+    /// 重置为样本数据（用于测试）
+    func resetToSampleData() {
+        loadSampleData()
     }
     
     var totalIncome: Double {
