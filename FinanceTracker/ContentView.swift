@@ -49,7 +49,7 @@ struct ContentView: View {
                 Spacer()
                 Button { selectedTab = 2 } label: {
                     VStack(spacing: 4) {
-                        Image(systemName: "calculator.fill").font(.system(size: 20)).foregroundColor(selectedTab == 2 ? .blue : .gray)
+                        Image(systemName: "function").font(.system(size: 20)).foregroundColor(selectedTab == 2 ? .blue : .gray)
                         Text("工具").font(.caption2).foregroundColor(selectedTab == 2 ? .blue : .gray)
                     }.frame(width: 70)
                 }

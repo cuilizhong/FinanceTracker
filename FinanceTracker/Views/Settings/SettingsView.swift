@@ -21,7 +21,7 @@ struct SettingsView: View {
                 // 外观设置
                 VStack(spacing: 12) {
                     HStack {
-                        Image(systemName: "palette.fill").foregroundColor(.indigo).frame(width: 28)
+                        Image(systemName: "paintbrush.fill").foregroundColor(.indigo).frame(width: 28)
                         Text("外观").font(.headline)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -29,7 +29,7 @@ struct SettingsView: View {
                     
                     Toggle(isOn: $isDarkMode) {
                         HStack {
-                            Image(systemName: "moon.fill").foregroundColor(.indigo).frame(width: 24)
+                            Image(systemName: "moon.stars.fill").foregroundColor(.indigo).frame(width: 24)
                             Text("深色模式").font(.subheadline)
                         }
                     }
